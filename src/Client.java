@@ -14,7 +14,6 @@ public class Client {
 		int segCount = 0;
 		int windowSize = 1;
 		int count = 0;
-		String sendpkt = "";
 		Boolean isfirstlost = false;
 		try {
 			socket = new Socket(address, port);
@@ -29,28 +28,26 @@ public class Client {
 			while (segCount < 10000000) {
 
 				for (int i = 0; i < windowSize; i++) {
-					sendpkt = String.valueOf(segment);
-					output.writeUTF(sendpkt);
+					output.writeInt(segment);
 					count++;
 					if (segment < Math.pow(2, 32)) {
 						segment = (1024 * count) + 1; // next segment number
-
 					} else {
 						segment = 1; // wrap around if the sequence reach max number 2^32
 					}
+
 				}
 				segCount += count;
 
-				//get the ACK number from the server
-				response = input.readUTF();
-				System.out.println(response);
-				String[] responseArray = response.split("\\s+");
-				int ackNumber = Integer.valueOf(responseArray[1]);
-				if (ackNumber < ((windowSize * 1024) + 1)) {
-					sendpkt = String.valueOf(ackNumber);
-					output.writeUTF(sendpkt);
+				// get the ACK number from the server
+				int ack = input.readInt();
+				if (ack < ((windowSize * 1024) + 1)) {
+					output.writeInt(ack);
 					isfirstlost = true;
 					windowSize /= 2;
+					if (windowSize < 1) {
+						windowSize = 1;
+					}
 				} else {
 					if (windowSize < Math.pow(2, 16)) {
 						if (isfirstlost) {
@@ -61,10 +58,12 @@ public class Client {
 
 					}
 				}
+				System.out.println(segCount);
 			}
-			// keep reading until "Over" is input
-			String line = "Over";
-			output.writeUTF(line);
+
+			// keep reading until -1 is input
+			output.writeInt(-1);
+			output.writeInt(segCount);
 			// done with sending segments, send "Over" to end the connection
 			input.close();
 			output.close();
