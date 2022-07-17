@@ -26,13 +26,13 @@ public class Client {
 			int ack = 0;
 			System.out.println(response);
 
-			while (segCount < 10000) {
+			while (segCount < 100000) {
 
 				for (int i = 0; i < windowSize; i++) {
 					output.writeInt(segment);
 					count++;
 					segCount++;
-					if (segCount > 10000) {
+					if (segCount > 100000) {
 						break;
 					} else if (segment < Math.pow(2, 32)) {
 						segment = getNextSeg(count); // next segment number

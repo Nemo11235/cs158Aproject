@@ -49,7 +49,7 @@ public class Server {
                         output.writeInt(ack);
                         receivedSeg++;
                         segment = input.readInt();
-                        System.out.println("received: " + receivedSeg);
+                        // System.out.println("received: " + receivedSeg);
 
                         // calculate good-put periodically
                         /*
@@ -64,7 +64,12 @@ public class Server {
                          * 
                          * }
                          */
+
                     }
+                    for (Integer i : buffer) {
+                        System.out.println(i);
+                    }
+                    System.out.println("Size: " + buffer.size());
 
                 } else {
                     System.out.println("Connection failed, please try again.");
@@ -77,6 +82,7 @@ public class Server {
         } catch (IOException i) {
             System.out.println(i);
         }
+
     }
 
     private static int getNextSeg(int seg) {
