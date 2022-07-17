@@ -23,31 +23,31 @@ public class Client {
 			output.writeUTF("network");
 			String response = "";
 			response = input.readUTF();
+			int ack = 0;
 			System.out.println(response);
 
-			while (segCount < 10000000) {
+			while (segCount < 10000) {
 
 				for (int i = 0; i < windowSize; i++) {
 					output.writeInt(segment);
 					count++;
-					if (segment < Math.pow(2, 32)) {
-						segment = (1024 * count) + 1; // next segment number
+					segCount++;
+					if (segCount > 10000) {
+						break;
+					} else if (segment < Math.pow(2, 32)) {
+						segment = getNextSeg(count); // next segment number
 					} else {
 						segment = 1; // wrap around if the sequence reach max number 2^32
 					}
-
+					ack = input.readInt();
 				}
-				segCount += count;
-
 				// get the ACK number from the server
-				int ack = input.readInt();
+
 				if (ack < ((windowSize * 1024) + 1)) {
 					output.writeInt(ack);
 					isfirstlost = true;
 					windowSize /= 2;
-					if (windowSize < 1) {
-						windowSize = 1;
-					}
+					ack = input.readInt();
 				} else {
 					if (windowSize < Math.pow(2, 16)) {
 						if (isfirstlost) {
@@ -58,7 +58,7 @@ public class Client {
 
 					}
 				}
-				System.out.println(segCount);
+				System.out.println("segCount: = " + segCount);
 			}
 
 			// keep reading until -1 is input
@@ -75,6 +75,11 @@ public class Client {
 			System.out.println(i);
 		}
 
+	}
+
+	private static int getNextSeg(int seg) {
+		int count = (seg - 1) / 1024;
+		return (count + 1) * 1024 + 1;
 	}
 
 	public static void main(String args[]) {

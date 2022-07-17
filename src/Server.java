@@ -30,30 +30,26 @@ public class Server {
                     output.writeUTF("Success");
 
                     // start accepting segments and send acks
-                    int ack = 1;
-                    int sentSeg = 0;
-                    int receivedSeg = 0;
+                    int ack = 1; // ack to sent
+                    double sentSeg = 10000000; // number of segment sent by the client
+                    int receivedSeg = 0; // number of segment received
                     int count = 0;
-                    List<Integer> buffer = new ArrayList<>();
-                    int segment;
+                    List<Integer> buffer = new ArrayList<>(); // store the correct segment
+                    int segment; // current segment recieved
                     segment = input.readInt();
-                    // case 1: server got 1, server sent the ack, and ack has been received
                     while (segment != -1) {
                         // if received the wrong segment, send the ack of the previous wanted segment
-                        if (segment != ack) {
-                            output.writeInt(ack);
-                        } else {
+                        if (segment == ack) {
                             // buffer the correct segment received and determin the next segment wanted,
                             // which is ack
                             buffer.add(segment);
-                            count = (segment - 1) / 1024 + 1;
-                            ack = (1024 * count) + 1;
-                            output.writeInt(ack);
+                            System.out.println(segment);
+                            ack = getNextSeg(segment); // update ack to the next expected segment number
                         }
+                        output.writeInt(ack);
                         receivedSeg++;
-                        // System.out.println("seg: " + segment);
-                        System.out.println("seg  " + count);
                         segment = input.readInt();
+                        System.out.println("received: " + receivedSeg);
 
                         // calculate good-put periodically
                         /*
@@ -81,6 +77,11 @@ public class Server {
         } catch (IOException i) {
             System.out.println(i);
         }
+    }
+
+    private static int getNextSeg(int seg) {
+        int count = (seg - 1) / 1024;
+        return (count + 1) * 1024 + 1;
     }
 
     public static void main(String args[]) {
