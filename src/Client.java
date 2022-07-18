@@ -14,6 +14,8 @@ public class Client {
 		int segCount = 0;
 		int windowSize = 1;
 		int count = 0;
+		int resentCount = 0;
+		int temp = 0;
 		Boolean isfirstlost = false;
 		try {
 			socket = new Socket(address, port);
@@ -34,16 +36,22 @@ public class Client {
 					segCount++;
 					if (segCount > 100000) {
 						break;
-					} else if (segment < Math.pow(2, 32)) {
-						segment = getNextSeg(count); // next segment number
 					} else {
-						segment = 1; // wrap around if the sequence reach max number 2^32
+						segment = getNextSeg(segment);
 					}
-					ack = input.readInt();
+					temp = input.readInt();
+					if (temp != -2) {
+						ack = temp;
+					}
 				}
 				// get the ACK number from the server
 				if (ack < ((windowSize * 1024) + 1)) {
 					output.writeInt(ack);
+					resentCount++;
+					if (temp == -2) {
+						output.writeInt(segCount + resentCount);
+						resentCount = 0;
+					}
 					isfirstlost = true;
 					windowSize /= 2;
 					ack = input.readInt();
@@ -78,7 +86,7 @@ public class Client {
 
 	private static int getNextSeg(int seg) {
 		int count = (seg - 1) / 1024;
-		return (count + 1) * 1024 + 1;
+		return seg > Math.pow(2, 17) ? 1 : (count + 1) * 1024 + 1;
 	}
 
 	public static void main(String args[]) {
