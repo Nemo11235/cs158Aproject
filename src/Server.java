@@ -33,15 +33,15 @@ public class Server {
                     int ack = 1; // ack to sent
                     double sentSeg = 10000000; // number of segment sent by the client
                     int receivedSeg = 0; // number of segment received
-                    int count = 0;
+                    int lastSeg = 0;
                     List<Integer> buffer = new ArrayList<>(); // store the correct segment
                     int segment; // current segment recieved
+                    int maxSegReceived = 0;
                     segment = input.readInt();
                     while (segment != -1) {
                         // if received the wrong segment, send the ack of the previous wanted segment
                         if (segment == ack) {
-                            // buffer the correct segment received and determin the next segment wanted,
-                            // which is ack
+                            // buffer the correct segment received and determin the next segment wanted
                             buffer.add(segment);
                             System.out.println(segment);
                             ack = getNextSeg(segment); // update ack to the next expected segment number
@@ -50,20 +50,14 @@ public class Server {
                         receivedSeg++;
                         segment = input.readInt();
                         // System.out.println("received: " + receivedSeg);
-
+                        maxSegReceived = Math.max(maxSegReceived, segment);
                         // calculate good-put periodically
-                        /*
-                         * if (receivedSeg == 1000) {
-                         * output.writeInt(-1); // request client to send the total segment sent to
-                         * server to calculate
-                         * // good-put
-                         * sentSeg = input.readInt();
-                         * System.out.
-                         * println("The good-put of the last 1000 segments received = received / sent = "
-                         * + receivedSeg + " / " + sentSeg + " = " + receivedSeg / sentSeg);
-                         * 
-                         * }
-                         */
+                        if (receivedSeg == 1000) {
+                            double res = (maxSegReceived - lastSeg) / 1000;
+                            System.out.println("The good-put of the last 1000 segments received = " + res);
+                            maxSegReceived = 0;
+                            lastSeg = segment;
+                        }
 
                     }
                     for (Integer i : buffer) {

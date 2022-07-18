@@ -42,7 +42,6 @@ public class Client {
 					ack = input.readInt();
 				}
 				// get the ACK number from the server
-
 				if (ack < ((windowSize * 1024) + 1)) {
 					output.writeInt(ack);
 					isfirstlost = true;
