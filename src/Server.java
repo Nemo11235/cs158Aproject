@@ -29,40 +29,34 @@ public class Server {
                     // notify the client that the connection is successful
                     output.writeUTF("Success");
 
-                    // start accepting segments and send acks
-                    int ack = 1; // ack to sent
-                    double sentSeg = 10000000; // number of segment sent by the client
-                    int receivedSeg = 0; // number of segment received
-                    List<Integer> buffer = new ArrayList<>(); // store the correct segment
-                    int segment; // current segment recieved
-                    segment = input.readInt();
-                    while (segment != -1) {
-                        // if received the wrong segment, send the ack of the previous wanted segment
-                        if (segment == ack) {
-                            // buffer the correct segment received and determin the next segment wanted
-                            buffer.add(segment);
-                            ack = getNextSeg(segment); // update ack to the next expected segment number
-                            receivedSeg++;
+                    int ack = 1;
+                    int receivedSeg = 0;
+                    TreeSet<Integer> buffer = new TreeSet<>(); // store the correct segment
+                    int seg; // current segment recieved
+                    seg = input.readInt();
+                    while (seg != -1) {
+                        // buffer the segment
+                        buffer.add(seg);
+                        while (seg <= buffer.last() && buffer.contains(ack)) {
+                            ack = getNextSeg(ack);
                         }
                         output.writeInt(ack);
-
-                        segment = input.readInt();
+                        seg = input.readInt();
                         // calculate good-put periodically
                         if (receivedSeg % 1000 == 0) {
                             output.writeInt(-2);
                             int sentCount = input.readInt();
                             double res = 1000 / (double) sentCount;
-                            System.out.println("The good-put of the last 1000 segments received = " +
-                                    res);
+                            // System.out.println("The good-put of the last 1000 segments received = " +
+                            // res);
                             // System.out.println(sentCount);
                         }
 
                     }
-                    // for (Integer i : buffer) {
-                    // System.out.println(i);
-                    // }
+                    for (Integer i : buffer) {
+                        System.out.println(i);
+                    }
                     System.out.println("Size: " + buffer.size());
-
                 } else {
                     System.out.println("Connection failed, please try again.");
                 }

@@ -10,13 +10,6 @@ public class Client {
 	// constructor to put IP address and port
 	public Client(String address, int port) {
 		// establish a connection
-		int segment = 1;
-		int segCount = 0;
-		int windowSize = 1;
-		int count = 0;
-		int resentCount = 0;
-		int temp = 0;
-		Boolean isfirstlost = false;
 		try {
 			socket = new Socket(address, port);
 			// sends/receive data to the server
@@ -25,53 +18,66 @@ public class Client {
 			output.writeUTF("network");
 			String response = "";
 			response = input.readUTF();
-			int ack = 0;
 			System.out.println(response);
 
+			int ack = 0;
+			int segment = 1;
+			int windowSize = 1;
+			int segCount = 0;
+			int resentCount = 0;
+			boolean lostBefore = false;
+			boolean hasLoss = false;
+			int adjustWindow = 0; // 0 for doubles, 1 for half, 2 for +1;
+
 			while (segCount < 100000) {
-
-				for (int i = 0; i < windowSize; i++) {
+				if (hasLoss) {
+					segment = getNextSeg(segment);
 					output.writeInt(segment);
-					count++;
 					segCount++;
-					if (segCount > 100000) {
-						break;
-					} else {
-						segment = getNextSeg(segment);
-					}
-					temp = input.readInt();
-					if (temp != -2) {
-						ack = temp;
-					}
-				}
-				// get the ACK number from the server
-				if (ack < ((windowSize * 1024) + 1)) {
-					output.writeInt(ack);
-					resentCount++;
-					if (temp == -2) {
-						output.writeInt(segCount + resentCount);
-						resentCount = 0;
-					}
-					isfirstlost = true;
-					windowSize /= 2;
-					ack = input.readInt();
+					adjustWindow = 1;
 				} else {
-					if (windowSize < Math.pow(2, 16)) {
-						if (isfirstlost) {
-							windowSize++;
+					for (int i = 0; i < windowSize; i++) {
+						output.writeInt(segment);
+						segCount++;
+						System.out.println("sending seg: " + segment);
+						if (segCount > 100000) {
+							break;
 						} else {
-							windowSize *= 2;
+							segment = getNextSeg(segment);
 						}
-
+						ack = input.readInt();
 					}
-				}
-				System.out.println("segCount: = " + segCount);
-			}
+					adjustWindow = lostBefore ? 2 : 0;
+					// if (ack < ((windowSize * 1024) + 1)) {
+					// output.writeInt(ack);
+					// resentCount++;
+					// isfirstlost = true;
+					// windowSize /= 2;
+					// ack = input.readInt();
+					// } else {
+					// if (windowSize < Math.pow(2, 16)) {
+					// if (isfirstlost) {
+					// windowSize++;
+					// } else {
+					// windowSize *= 2;
+					// }
 
-			// keep reading until -1 is input
+					// }
+					// }
+				}
+
+				if (adjustWindow == 0) {
+					windowSize *= 2;
+				} else if (adjustWindow == 1) {
+					windowSize /= 2;
+				} else {
+					windowSize++;
+				}
+
+				// get the ACK number from the server
+				ack = input.readInt();
+			}
 			output.writeInt(-1);
-			output.writeInt(segCount);
-			// done with sending segments, send "Over" to end the connection
 			input.close();
 			output.close();
 			socket.close();
