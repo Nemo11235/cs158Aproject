@@ -1,4 +1,5 @@
 import java.net.*;
+import java.util.*;
 import java.io.*;
 
 public class Client {
@@ -27,60 +28,62 @@ public class Client {
 			int resentCount = 0;
 			boolean lostBefore = false;
 			int adjustWindow = 0; // 0 for doubles, 1 for half, 2 for +1;
+			Random rand = new Random();
 
-			while (segCount < 1000) {
+			while (segCount < 100) {
+				System.out.println("\n ========================= \n");
 				if (ack == segment) {
 					for (int i = 0; i < windowSize; i++) {
-						output.writeInt(segment);
+						int send = rand.nextInt(10);
+						if (send == 0) {
+							System.out.println(segment + " will be lost");
+						}
+						System.out.println("sending: " + segment);
+
+						if (send != 0) {
+							output.writeInt(segment);
+						}
 						segCount++;
-						System.out.println("sending seg: " + segment);
-						if (segCount > 1000) {
+						// System.out.println("sending seg: " + segment);
+
+						if (segCount >= 100) {
 							break;
 						} else {
 							segment = getNextSeg(segment);
 						}
-						ack = input.readInt();
-						System.out.println("ack: " + ack);
+						if (send != 0) {
+							ack = input.readInt();
+							System.out.println("ack: " + ack);
+						}
+						// System.out.println("ack: " + ack);
+
 					}
 					adjustWindow = lostBefore ? 2 : 0;
 				} else {
 					segment = ack;
 					output.writeInt(segment);
+					System.out.println("resending: " + segment);
 					segCount++;
 					adjustWindow = 1;
 					lostBefore = true;
 					resentCount++;
-					// if (ack < ((windowSize * 1024) + 1)) {
-					// output.writeInt(ack);
-					// resentCount++;
-					// isfirstlost = true;
-					// windowSize /= 2;
-					// ack = input.readInt();
-					// } else {
-					// if (windowSize < Math.pow(2, 16)) {
-					// if (isfirstlost) {
-					// windowSize++;
-					// } else {
-					// windowSize *= 2;
-					// }
-
-					// }
-					// }
 					ack = input.readInt();
+					segment = ack;
+					System.out.println("ack from resending: " + ack);
 				}
 
 				if (adjustWindow == 0 && windowSize * 2 < Math.pow(2, 16)) {
 					windowSize *= 2;
 					System.out.println("doubled windowSize = " + windowSize);
-				} else if (adjustWindow == 1 && windowSize != 1) {
-					windowSize /= 2;
+				} else if (adjustWindow == 1) {
+					if (windowSize != 1) {
+						windowSize /= 2;
+					}
 					System.out.println("halfed windowSize = " + windowSize);
 				} else {
 					windowSize++;
 					System.out.println("windowSize + 1 = " + windowSize);
 				}
-				System.out.println("total seg sent: " + (segCount - 1));
-				System.out.println("resent count: " + resentCount);
 				// get the ACK number from the server
 			}
 			output.writeInt(-1);
@@ -107,3 +110,5 @@ public class Client {
 }
 
 // 10.0.0.17
+// localhost
+// 172.20.10.2

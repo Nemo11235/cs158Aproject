@@ -36,7 +36,9 @@ public class Server {
                     while (seg != -1) {
                         System.out.println(seg);
                         // buffer the segment
-                        buffer.add(seg);
+                        if (buffer.add(seg)) {
+                            segRecCount++;
+                        }
                         while (seg <= buffer.last() && buffer.contains(ack)) {
                             if (getNextSeg(ack) == 1) {
                                 buffer.clear();
@@ -44,7 +46,7 @@ public class Server {
                             }
                             ack = getNextSeg(ack);
                         }
-                        segRecCount++;
+
                         output.writeInt(ack);
                         seg = input.readInt();
                         // calculate good-put periodically
@@ -60,7 +62,7 @@ public class Server {
                     for (Integer i : buffer) {
                         System.out.println(i);
                     }
-                    System.out.println("total seg received: " + (segRecCount - 1));
+                    System.out.println("total seg received: " + segRecCount);
                 } else {
                     System.out.println("Connection failed, please try again.");
                 }
