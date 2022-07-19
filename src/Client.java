@@ -26,7 +26,6 @@ public class Client {
 			int segCount = 0;
 			int resentCount = 0;
 			boolean lostBefore = false;
-			boolean hasLoss = false;
 			int adjustWindow = 0; // 0 for doubles, 1 for half, 2 for +1;
 
 			while (segCount < 1000) {
@@ -35,13 +34,13 @@ public class Client {
 						output.writeInt(segment);
 						segCount++;
 						System.out.println("sending seg: " + segment);
-						if (segCount > 100000) {
+						if (segCount > 1000) {
 							break;
 						} else {
 							segment = getNextSeg(segment);
 						}
 						ack = input.readInt();
-						System.out.println("Now " + ack + " is wanted");
+						System.out.println("ack: " + ack);
 					}
 					adjustWindow = lostBefore ? 2 : 0;
 				} else {
@@ -50,6 +49,7 @@ public class Client {
 					segCount++;
 					adjustWindow = 1;
 					lostBefore = true;
+					resentCount++;
 					// if (ack < ((windowSize * 1024) + 1)) {
 					// output.writeInt(ack);
 					// resentCount++;
@@ -79,7 +79,8 @@ public class Client {
 					windowSize++;
 					System.out.println("windowSize + 1 = " + windowSize);
 				}
-
+				System.out.println("total seg sent: " + (segCount - 1));
+				System.out.println("resent count: " + resentCount);
 				// get the ACK number from the server
 			}
 			output.writeInt(-1);

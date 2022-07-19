@@ -44,23 +44,23 @@ public class Server {
                             }
                             ack = getNextSeg(ack);
                         }
+                        segRecCount++;
                         output.writeInt(ack);
                         seg = input.readInt();
                         // calculate good-put periodically
-                        // if (segRecCount % 1000 == 0) {
+                        // if (segRecCount == 1000) {
                         // output.writeInt(-2);
                         // int sentCount = input.readInt();
                         // double res = 1000 / (double) sentCount;
-                        // // System.out.println("The good-put of the last 1000 segments received = " +
-                        // // res);
-                        // System.out.println(res);
+                        // System.out.println("The good-put of the last 1000 segments received = " +
+                        // res);
                         // }
 
                     }
                     for (Integer i : buffer) {
                         System.out.println(i);
                     }
-                    System.out.println("Size: " + buffer.size());
+                    System.out.println("total seg received: " + (segRecCount - 1));
                 } else {
                     System.out.println("Connection failed, please try again.");
                 }
@@ -81,7 +81,7 @@ public class Server {
     }
 
     public static void main(String args[]) {
-        Server server = new Server(4001); // my port number
+        Server server = new Server(4001);
     }
 
 }
