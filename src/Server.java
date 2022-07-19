@@ -38,6 +38,10 @@ public class Server {
                         // buffer the segment
                         buffer.add(seg);
                         while (seg <= buffer.last() && buffer.contains(ack)) {
+                            if (getNextSeg(ack) == 1) {
+                                buffer.clear();
+                                buffer.add(1);
+                            }
                             ack = getNextSeg(ack);
                         }
                         output.writeInt(ack);

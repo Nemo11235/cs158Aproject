@@ -29,7 +29,7 @@ public class Client {
 			boolean hasLoss = false;
 			int adjustWindow = 0; // 0 for doubles, 1 for half, 2 for +1;
 
-			while (segCount < 100000) {
+			while (segCount < 1000) {
 				if (ack == segment) {
 					for (int i = 0; i < windowSize; i++) {
 						output.writeInt(segment);
@@ -104,3 +104,5 @@ public class Client {
 		Client client = new Client("localhost", 4001);
 	}
 }
+
+// 10.0.0.17
