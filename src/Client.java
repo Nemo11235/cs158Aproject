@@ -27,13 +27,30 @@ public class Client {
 			int resentCount = 0;
 			boolean lostBefore = false;
 			int adjustWindow = 0; // 0 for doubles, 1 for half, 2 for +1;
+			int rand = 0;
+			int randomSegment=1;
 
 			while (segCount < 1000) {
+				//everytime comes to while loop calculate a random number between 1 to 1000
+				rand = (int)(Math.random()*100) + 1;
+				
 				if (ack == segment) {
 					for (int i = 0; i < windowSize; i++) {
-						output.writeInt(segment);
-						segCount++;
-						System.out.println("sending seg: " + segment);
+						if(segCount%100 == 1) {
+							randomSegment = segCount + rand;
+						}
+						if(segment == getCurrentSeg(randomSegment)) {
+							System.out.println("random segment number: " + getCurrentSeg(randomSegment));
+							segCount++;
+							System.out.println("segCount: " + segCount);
+							
+						} else {
+							output.writeInt(segment);
+							segCount++;
+							System.out.println("sending seg: " + segment);
+
+						}
+						
 						if (segCount > 1000) {
 							break;
 						} else {
@@ -45,6 +62,7 @@ public class Client {
 					adjustWindow = lostBefore ? 2 : 0;
 				} else {
 					segment = ack;
+					System.out.println("Resent segment number: " + segment);
 					output.writeInt(segment);
 					segCount++;
 					adjustWindow = 1;
@@ -100,6 +118,10 @@ public class Client {
 		int count = (seg - 1) / 1024;
 		return seg > Math.pow(2, 17) ? 1 : (count + 1) * 1024 + 1;
 	}
+	private static int getCurrentSeg(int randomSegNumber) {
+		return (randomSegNumber * 1024) + 1;
+	}
+	
 
 	public static void main(String args[]) {
 		Client client = new Client("localhost", 4001);

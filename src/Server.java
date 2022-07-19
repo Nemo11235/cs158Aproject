@@ -47,6 +47,13 @@ public class Server {
                         segRecCount++;
                         output.writeInt(ack);
                         seg = input.readInt();
+//                        if(input.available() == 0) {
+//                        	 seg = input.readInt();
+//                        } else {
+//                        	output.writeInt(ack);
+//                        }
+                        
+                       
                         // calculate good-put periodically
                         // if (segRecCount == 1000) {
                         // output.writeInt(-2);
