@@ -36,14 +36,15 @@ public class Server {
                     while (seg != -1) {
                         System.out.println(seg);
                         // buffer the segment
+                        if (seg == 1) {
+                            buffer.clear();
+                            System.out.println("wrap around, buffer cleared");
+                        }
                         if (buffer.add(seg)) {
                             segRecCount++;
                         }
                         while (seg <= buffer.last() && buffer.contains(ack)) {
-                            if (getNextSeg(ack) == 1) {
-                                buffer.clear();
-                                buffer.add(1);
-                            }
+
                             ack = getNextSeg(ack);
                         }
 

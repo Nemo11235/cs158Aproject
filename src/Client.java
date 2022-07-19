@@ -47,7 +47,7 @@ public class Client {
 						// System.out.println("sending seg: " + segment);
 
 						if (segCount >= 100) {
-							break;
+							continue;
 						} else {
 							segment = getNextSeg(segment);
 						}
@@ -63,7 +63,6 @@ public class Client {
 					segment = ack;
 					output.writeInt(segment);
 					System.out.println("resending: " + segment);
-					segCount++;
 					adjustWindow = 1;
 					lostBefore = true;
 					resentCount++;
@@ -86,6 +85,8 @@ public class Client {
 				}
 				// get the ACK number from the server
 			}
+			System.out.println("total seg sent: " + segCount);
+			System.out.println("resent: " + resentCount);
 			output.writeInt(-1);
 			input.close();
 			output.close();
