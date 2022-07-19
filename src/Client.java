@@ -20,7 +20,7 @@ public class Client {
 			response = input.readUTF();
 			System.out.println(response);
 
-			int ack = 0;
+			int ack = 1;
 			int segment = 1;
 			int windowSize = 1;
 			int segCount = 0;
@@ -30,12 +30,7 @@ public class Client {
 			int adjustWindow = 0; // 0 for doubles, 1 for half, 2 for +1;
 
 			while (segCount < 100000) {
-				if (hasLoss) {
-					segment = getNextSeg(segment);
-					output.writeInt(segment);
-					segCount++;
-					adjustWindow = 1;
-				} else {
+				if (ack == segment) {
 					for (int i = 0; i < windowSize; i++) {
 						output.writeInt(segment);
 						segCount++;
@@ -46,8 +41,15 @@ public class Client {
 							segment = getNextSeg(segment);
 						}
 						ack = input.readInt();
+						System.out.println("Now " + ack + " is wanted");
 					}
 					adjustWindow = lostBefore ? 2 : 0;
+				} else {
+					segment = ack;
+					output.writeInt(segment);
+					segCount++;
+					adjustWindow = 1;
+					lostBefore = true;
 					// if (ack < ((windowSize * 1024) + 1)) {
 					// output.writeInt(ack);
 					// resentCount++;
@@ -64,18 +66,21 @@ public class Client {
 
 					// }
 					// }
+					ack = input.readInt();
 				}
 
-				if (adjustWindow == 0) {
+				if (adjustWindow == 0 && windowSize * 2 < Math.pow(2, 16)) {
 					windowSize *= 2;
-				} else if (adjustWindow == 1) {
+					System.out.println("doubled windowSize = " + windowSize);
+				} else if (adjustWindow == 1 && windowSize != 1) {
 					windowSize /= 2;
+					System.out.println("halfed windowSize = " + windowSize);
 				} else {
 					windowSize++;
+					System.out.println("windowSize + 1 = " + windowSize);
 				}
 
 				// get the ACK number from the server
-				ack = input.readInt();
 			}
 			output.writeInt(-1);
 			input.close();
