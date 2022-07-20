@@ -21,28 +21,34 @@ public class Server {
             output = new DataOutputStream(socket.getOutputStream());
 
             try {
-
+                // read string from the client and confirm connection
                 String inputData = input.readUTF();
-
                 if (inputData.equals("network")) {
-
                     System.out.println("Connection request received, client is now connected");
-                    // notify the client that the connection is successful
                     output.writeUTF("Success");
+
+                    // initialize variables
                     int ack = 1;
-                    // int segRecCount = 0;
+                    int segRecCount = 0;
                     TreeSet<Integer> buffer = new TreeSet<>(); // store the correct segment
                     // List<Double> goodPutList = new ArrayList<>();
                     int resentCount = 0;
 
+                    // start to receive segments from the client
                     int seg = input.readInt();
                     while (seg != -1) {
                         System.out.println("seg received: " + seg);
+
                         // buffer the segment
+                        if (buffer.add(seg)) {
+                            System.out.println("seg count increased");
+                            segRecCount++;
+                        }
 
-                        buffer.add(seg);
-
+                        // search in the buffer, find the next needed segment
                         while (buffer.contains(ack) && seg <= buffer.last()) {
+                            // when wrap around happens, clear the buffer so that new numbers can be loaded
+                            // in the buffer
                             if (getNextSeg(ack) == 1) {
                                 buffer.clear();
                                 buffer.add(1);
@@ -51,8 +57,9 @@ public class Server {
                             ack = getNextSeg(ack);
                         }
 
+                        // send ack(next seg wanted) to the client
                         output.writeInt(ack);
-
+                        // receive the next incoming segment
                         seg = input.readInt();
                         // calculate good-put periodically
                         // if (segRecCount % 1000 == 0) {
@@ -66,12 +73,14 @@ public class Server {
 
                     }
 
+                    // calcualte good-put
                     resentCount = input.readInt();
                     System.out.println("\n ========================= \n");
-                    double res = 5000.0 / (5000.0 + resentCount);
+                    double res = 10000.0 / (10000.0 + resentCount);
                     System.out.println("Total number of segment resent: " + resentCount);
                     System.out.println("Avg good-put: " + res);
-                    // System.out.println("total seg received: " + segRecCount);
+                    System.out.println("total seg received: " + segRecCount);
+
                     // double sum = 0;
                     // for (double d : goodPutList) {
                     // sum += d;
@@ -92,6 +101,8 @@ public class Server {
 
     }
 
+    // calculate the next segment based on the current one, perform wrap around when
+    // it reaches the maximum number 2^17
     private static int getNextSeg(int seg) {
         int count = (seg - 1) / 1024;
         return seg > Math.pow(2, 17) ? 1 : (count + 1) * 1024 + 1;

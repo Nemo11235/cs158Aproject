@@ -12,15 +12,19 @@ public class Client {
 	public Client(String address, int port) {
 		// establish a connection
 		try {
+
+			// initialize the socket and input/output stream
 			socket = new Socket(address, port);
-			// sends/receive data to the server
 			input = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 			output = new DataOutputStream(socket.getOutputStream());
+
+			// send a string to server and wait for ack to confirm connection
 			output.writeUTF("network");
 			String response = "";
 			response = input.readUTF();
 			System.out.println(response);
 
+			// initialize variables
 			int ack = 1;
 			int segment = 1;
 			int windowSize = 1;
@@ -30,17 +34,22 @@ public class Client {
 			int adjustWindow = 0; // 0 for doubles, 1 for half, 2 for +1;
 			Random rand = new Random();
 			List<Integer> windowSizes = new ArrayList<>();
+			List<Integer> lostSegs = new ArrayList<>();
+			int totalSegToSend = 100;
 
-			while (segCount < 10000) {
+			// keep sending until we sent all segments
+			while (segCount < totalSegToSend) {
 				System.out.println("\n ========================= \n");
 				if (ack == segment) {
 					for (int i = 0; i < windowSize; i++) {
-						int send = rand.nextInt(1000);
+						// randomly loss some segments
+						int send = rand.nextInt(10);
 						if (send == 0) {
 							System.out.println(segment + " will be lost");
+							lostSegs.add(segment);
 						}
 						System.out.println("sending: " + segment);
-
+						// send the segment to server if we choose not to lose it
 						if (send != 0) {
 							output.writeInt(segment);
 							ack = input.readInt();
@@ -48,9 +57,9 @@ public class Client {
 							segCount++;
 						}
 
-						// System.out.println("sending seg: " + segment);
-
-						if (segCount >= 10000) {
+						// if we have more segments to send, calculate the next segment to send,
+						// otherwise jump out from the loop
+						if (segCount >= totalSegToSend) {
 							break;
 						} else {
 							segment = getNextSeg(segment);
@@ -59,17 +68,20 @@ public class Client {
 					}
 					adjustWindow = lostBefore ? 2 : 0;
 				} else {
+					// retransmit the missing segment
 					segment = ack;
 					output.writeInt(segment);
 					System.out.println("resending: " + segment);
 					adjustWindow = 1;
 					lostBefore = true;
 					resentCount++;
+					segCount++;
 					ack = input.readInt();
 					segment = ack;
 					System.out.println("ack from resending: " + ack);
 				}
 
+				// adjust the window size according to the ack
 				if (adjustWindow == 0 && windowSize * 2 < Math.pow(2, 16)) {
 					windowSize *= 2;
 					System.out.println("doubled windowSize = " + windowSize);
@@ -84,10 +96,19 @@ public class Client {
 				}
 				windowSizes.add(windowSize);
 			}
+
+			// print out the data we want to see
 			System.out.println("total seg sent: " + segCount);
 			System.out.println("resent: " + resentCount);
+			System.out.println("\n ========================= \n");
+			System.out.println("Window size changes over time: ");
 			windowSizes.add(0, 1);
 			for (Integer i : windowSizes) {
+				System.out.println(i);
+			}
+			System.out.println("\n ========================= \n");
+			System.out.println("Lost segments: ");
+			for (Integer i : lostSegs) {
 				System.out.println(i);
 			}
 			output.writeInt(-1);
