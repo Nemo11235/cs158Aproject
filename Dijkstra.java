@@ -9,20 +9,20 @@ public class Dijkstra {
     public void getSSSP() {
         ArrayList<String> data = readFile("./input.txt");
         int numOfVertices = Integer.parseInt(data.get(0));
+
         // Build the adjacency list
         for (int i = 1; i < data.size(); i++) {
             String s = data.get(i);
             int[] cur = toIntArray(s);
             int src = cur[0];
-
             for (int j = 1; j < cur.length; j += 2) {
                 int dest = cur[j];
                 int weight = cur[j + 1];
+                // weight 0 means no direct path to the destination node
                 if (weight != 0) {
                     adj.putIfAbsent(src, new ArrayList<>());
                     adj.get(src).add(new Integer[] { weight, dest });
                 }
-
             }
         }
 
@@ -38,22 +38,22 @@ public class Dijkstra {
     }
 
     // calculate the
-    private void dijkstra(int[] signalReceivedAt, int src) {
+    private void dijkstra(int[] dist, int src) {
 
         Queue<Integer[]> pq = new PriorityQueue<>((a, b) -> a[1] - b[1]);
         pq.add(new Integer[] { 0, src });
         // Time for starting node is 0
-        signalReceivedAt[src] = 0;
-        int[] prev = new int[signalReceivedAt.length];
-        prev[src] = -1;
+        dist[src] = 0;
+        int[] prev = new int[dist.length];
+        prev[src] = 0;
+        boolean[] visited = new boolean[dist.length];
 
         while (!pq.isEmpty()) {
-
             Integer[] topPair = pq.remove();
             int currNode = topPair[1];
             int currNodeTime = topPair[0];
 
-            if (currNodeTime > signalReceivedAt[currNode] || !adj.containsKey(currNode)) {
+            if (currNodeTime > dist[currNode] || !adj.containsKey(currNode)) {
                 continue;
             }
 
@@ -62,15 +62,20 @@ public class Dijkstra {
                 int time = edge[0];
                 int neighborNode = edge[1];
 
-                // Fastest signal time for neighborNode so far
-                // signalReceivedAt[currNode] + time :
-                // time when signal reaches neighborNode
-                if (signalReceivedAt[neighborNode] > currNodeTime + time) {
-                    signalReceivedAt[neighborNode] = currNodeTime + time;
-                    pq.add(new Integer[] { signalReceivedAt[neighborNode], neighborNode });
+                if (dist[neighborNode] >= currNodeTime + time) {
+                    dist[neighborNode] = currNodeTime + time;
+                    pq.add(new Integer[] { dist[neighborNode], neighborNode });
                     prev[neighborNode] = currNode;
                 }
+                if (!visited[neighborNode]) {
+                    for (int i = 1; i < dist.length; i++) {
+                        System.out.print(dist[i] + " ");
+                    }
+                    System.out.println();
+                    visited[neighborNode] = true;
+                }
             }
+
         }
 
         // print the results
@@ -129,3 +134,8 @@ public class Dijkstra {
     }
 
 }
+// 4
+// 1 2 8 3 16 4 4
+// 2 1 2 3 0 4 4
+// 3 1 2 2 4 4 0
+// 4 1 12 2 6 3 10
