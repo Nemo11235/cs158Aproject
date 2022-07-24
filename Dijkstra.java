@@ -6,8 +6,8 @@ public class Dijkstra {
     Map<Integer, List<Integer[]>> adj = new HashMap<>(); // node, <distance, destinationNode>
 
     // calcualte the SSSP;
-    public void getSSSP() {
-        ArrayList<String> data = readFile("./input.txt");
+    public void getSSSP(String fileName) {
+        ArrayList<String> data = readFile(fileName);
         int numOfVertices = Integer.parseInt(data.get(0));
 
         // Build the adjacency list
@@ -31,28 +31,31 @@ public class Dijkstra {
 
         dijkstra(dist, 1);
 
+        // print the shortest path to each node
         for (int i = 2; i < dist.length; i++) {
             System.out.println("Shortest distance to " + i + ": " + dist[i]);
         }
 
     }
 
-    // calculate the
+    // run the dijkstra algorithm, store the distances in dist
+    // print the path to each node
     private void dijkstra(int[] dist, int src) {
-
         Queue<Integer[]> pq = new PriorityQueue<>((a, b) -> a[1] - b[1]);
         pq.add(new Integer[] { 0, src });
-        // Time for starting node is 0
+        // Distance to sorce node itself is 0
         dist[src] = 0;
         int[] prev = new int[dist.length];
         prev[src] = 0;
         boolean[] visited = new boolean[dist.length];
 
+        // always pick the lightest edge to relax
         while (!pq.isEmpty()) {
             Integer[] topPair = pq.remove();
             int currNode = topPair[1];
             int currNodeTime = topPair[0];
 
+            // skip if the new path cost more than the old one
             if (currNodeTime > dist[currNode] || !adj.containsKey(currNode)) {
                 continue;
             }
@@ -98,6 +101,7 @@ public class Dijkstra {
         }
     }
 
+    // read the file and store each line of data in ArrayList
     public ArrayList<String> readFile(String fileName) {
         ArrayList<String> res = new ArrayList<>();
         try {
@@ -130,12 +134,7 @@ public class Dijkstra {
 
     public static void main(String[] args) {
         Dijkstra dij = new Dijkstra();
-        dij.getSSSP();
+        dij.getSSSP("./input.txt");
     }
 
 }
-// 4
-// 1 2 8 3 16 4 4
-// 2 1 2 3 0 4 4
-// 3 1 2 2 4 4 0
-// 4 1 12 2 6 3 10
